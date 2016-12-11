@@ -44,7 +44,7 @@ sendIn {s} {prf=Extra rest} {xs=a::xs++ys} f (Bnd g x)
 
 ||| Full belief propagation.
 propagate
-: Semiring s
+  : Semiring s
   => Prob s xs a
   -> {auto allBounded : AllFinite xs}
   -> Prob s xs a
