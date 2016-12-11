@@ -1,5 +1,0 @@
-package belief-propagation-idris
-
-modules = Semiring
-        , HetVect
-        , Marginalization

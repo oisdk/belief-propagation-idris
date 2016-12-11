@@ -1,3 +1,8 @@
 *.ibc
 *.o
 .#*
+*.html
+
+belief_doc/IdrisDoc
+
+*.css
