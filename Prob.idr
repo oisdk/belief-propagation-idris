@@ -5,6 +5,7 @@ import Semiring
 import HetVect
 
 %default total
+%access public export
 
 ||| Probability monad which keeps a list of the variables it contains
 data Prob : Type -> List Type -> Type -> Type where
@@ -34,18 +35,18 @@ sendIn f (Obs x) = Obs x
 sendIn f (Dst g) = Dst (\x => f [x] * g x)
 sendIn {s} {prf=Extra rest} {xs=a::xs++ys} f (Bnd g x)
   = Bnd
-    (\y => sendIn (margVecL {prf = ysBounds} f . (y::)) {prf = xsBounds} (g y))
-    (sendIn (margVecR (margOnce f) {prf = xsBounds}) {prf = ysBounds} x)
+    (\y => sendIn (margVecL {prf = ysFinite} f . (y::)) {prf = xsFinite} (g y))
+    (sendIn (margVecR (margOnce f) {prf = xsFinite}) {prf = ysFinite} x)
   where
-    xsBounds : AllFinite xs
-    xsBounds = boundedDistL rest
-    ysBounds : AllFinite ys
-    ysBounds = boundedDistR rest
+    xsFinite : AllFinite xs
+    xsFinite = finiteDistL rest
+    ysFinite : AllFinite ys
+    ysFinite = finiteDistR rest
 
 ||| Full belief propagation.
 propagate
   : Semiring s
   => Prob s xs a
-  -> {auto allBounded : AllFinite xs}
+  -> {auto allFinite : AllFinite xs}
   -> Prob s xs a
 propagate p = sendIn (sendOut p) p

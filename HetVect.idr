@@ -1,11 +1,11 @@
 module HetVect
 
 %default total
+%access public export
 
 infixr 7 ::
 
 ||| Heterogeneous list
-public export
 data Vect : List Type -> Type where
   Nil  : Vect []
   (::) : t -> Vect ts -> Vect (t::ts)
@@ -27,7 +27,6 @@ uncurryV f (x :: xs) = uncurryV (f x) xs
 
 infixr 7 ++
 
-export
 (++) : Vect xs -> Vect ys -> Vect (xs++ys)
 [] ++ ws = ws
 (v::vs) ++ ws = v :: vs ++ ws

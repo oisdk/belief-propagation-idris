@@ -5,8 +5,8 @@ import HetVect
 import Data.Morphisms
 
 %default total
+%access public export
 
-export
 prodFuncs
   : Semiring n
   => {xs, ys: List Type}
@@ -20,7 +20,6 @@ prodFuncs {xs=x::xs} f g (y :: z) = prodFuncs (f . (y::)) g z
 ||| A proof that every type in a given list belongs to a finite, bounded,
 ||| enumerable domain. Possibly better modelled in a more generic way (ie for 
 ||| arbitrary constraints).
-public export
 data AllFinite : List Type -> Type where
   Empty : AllFinite []
   Extra
@@ -29,17 +28,14 @@ data AllFinite : List Type -> Type where
     => AllFinite (x::xs)
 
 ||| Maybe reformulate this in a tail-recursive way.
-export
 marg : (Semiring n, MinBound a, MaxBound a, Enum a) => (a -> n) -> n
 marg f = sum (map f [minBound .. maxBound])
 
-export
 margOnce
   : (Semiring n, MinBound t, MaxBound t, Enum t)
   => (Vect (t::ts) -> n) -> (Vect ts -> n)
 margOnce f = (applyMor . marg) (\x => Mor (f . (x::)))
 
-export
 margVec
   : Semiring n
   => {xs : List Type}
@@ -48,7 +44,6 @@ margVec
 margVec {xs=[]} f = f []
 margVec {xs=x::xs} {prf=Extra rest} f = margVec (margOnce f)
 
-export
 margVecL
   : Semiring n
   => {xs, ys: List Type}
@@ -58,7 +53,6 @@ margVecL
 margVecL f [] =  margVec f
 margVecL f (x :: xs) = margVecL (\ys => f (x::ys)) xs
 
-export
 margVecR
   : Semiring n
   => {xs, ys: List Type}
@@ -68,18 +62,17 @@ margVecR
   -> n
 margVecR f = applyMor (margVec (\xs => Mor (\ys => f (xs++ys))))
 
-export
-boundedDistL
+finiteDistL
   : {xs, ys : List Type}
   -> (prf : AllFinite (xs++ys))
   -> AllFinite xs
-boundedDistL {xs=[]} prf = Empty
-boundedDistL {xs=x::xs} (Extra rest) = Extra (boundedDistL rest)
+finiteDistL {xs=[]} prf = Empty
+finiteDistL {xs=x::xs} (Extra rest) = Extra (finiteDistL rest)
 
 export
-boundedDistR
+finiteDistR
   : {xs,ys : List Type}
   -> (prf : AllFinite (xs++ys))
   -> AllFinite ys
-boundedDistR {xs=[]} prf = prf
-boundedDistR {xs=x::xs} (Extra rest) = boundedDistR {xs} rest
+finiteDistR {xs=[]} prf = prf
+finiteDistR {xs=x::xs} (Extra rest) = finiteDistR {xs} rest
