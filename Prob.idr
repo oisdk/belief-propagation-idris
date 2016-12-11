@@ -9,7 +9,7 @@ import HetVect
 
 ||| Probability monad which keeps a list of the variables it contains
 data Prob : Type -> List Type -> Type -> Type where
-  ||| Observed value. Equivalent to "certain"
+  ||| Observed value.
   Obs : a -> Prob s [] a
   ||| change to (forall s. Semiring s => (a -> s) -> s) in order to avoid enum,
   ||| bounded constraints (maybe).

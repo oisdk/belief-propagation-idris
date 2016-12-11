@@ -69,7 +69,6 @@ finiteDistL
 finiteDistL {xs=[]} prf = Empty
 finiteDistL {xs=x::xs} (Extra rest) = Extra (finiteDistL rest)
 
-export
 finiteDistR
   : {xs,ys : List Type}
   -> (prf : AllFinite (xs++ys))
