@@ -75,3 +75,18 @@ finiteDistR
   -> AllFinite ys
 finiteDistR {xs=[]} prf = prf
 finiteDistR {xs=x::xs} (Extra rest) = finiteDistR {xs} rest
+
+-- elemConforms : {x : Type} -> {xs : List Type} -> (conform : AllFinite xs) -> (el : Elem x xs) -> Enum x
+-- elemConforms (Extra rest) Here = Enum x
+-- elemConforms conform (There x) = ?elemConforms_rhs_2
+
+margVecAny
+  :  Semiring n
+  => {x : Type}
+  -> {xs : List Type}
+  -> (fin : AllFinite xs)
+  -> (elem : Elem x xs)
+  -> (Vect xs -> n)
+  -> x -> n
+margVecAny (Extra rest) Here f x = margVec {prf = rest} (f . (x::))
+margVecAny (Extra rest) (There z) f x = margVecAny rest z (margOnce f) x

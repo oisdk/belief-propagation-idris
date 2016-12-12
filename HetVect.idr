@@ -30,3 +30,12 @@ infixr 7 ++
 (++) : Vect xs -> Vect ys -> Vect (xs++ys)
 [] ++ ws = ws
 (v::vs) ++ ws = v :: vs ++ ws
+
+using (x:a, y:a, xs:List a)
+  data Elem : a -> List a -> Type where
+    Here  : Elem x (x :: xs)
+    There : Elem x xs -> Elem x (y :: xs)
+
+||| Nothing can be in an empty Vect
+noEmptyElem : {x : a} -> Elem x [] -> Void
+noEmptyElem Here impossible
