@@ -7,15 +7,15 @@ import Data.Morphisms
 %default total
 %access public export
 
-prodFuncs
+prodFuncsV
   : Semiring n
   => {xs, ys: List Type}
   -> (Vect xs -> n)
   -> (Vect ys -> n)
   -> Vect (xs++ys)
   -> n
-prodFuncs {xs=[]} f g vs = f Nil * g vs
-prodFuncs {xs=x::xs} f g (y :: z) = prodFuncs (f . (y::)) g z
+prodFuncsV {xs=[]} f g vs = f Nil * g vs
+prodFuncsV {xs=x::xs} f g (y :: z) = prodFuncsV (f . (y::)) g z
 
 ||| A proof that every type in a given list belongs to a finite, bounded,
 ||| enumerable domain. Possibly better modelled in a more generic way (ie for 
@@ -90,3 +90,31 @@ margVecAny
   -> x -> n
 margVecAny (Extra rest) Here f x = margVec {prf = rest} (f . (x::))
 margVecAny (Extra rest) (There z) f x = margVecAny rest z (margOnce f) x
+
+-- Can almost certainly be written quicker.
+margAll
+  :  Semiring s
+  => {xs : List Type}
+  -> {auto finite : AllFinite xs}
+  -> curried xs s
+  -> s
+margAll = go where
+  go
+    :  Semiring s
+    => {xs : List Type}
+    -> {auto finite : AllFinite xs}
+    -> curried xs s
+    -> s
+  go {finite = Empty} m = m
+  go {finite = (Extra rest)} m =
+    sum (map (go . m) [minBound .. maxBound])
+
+prodFuncs
+  : Semiring n
+  => {xs: List Type}
+  -> curried xs n
+  -> curried xs n
+  -> curried xs n
+prodFuncs {xs=[]} x y = x * y
+prodFuncs {n} {xs=x::xs} f g
+  = \y => prodFuncs {n} {xs} (f y) (g y)

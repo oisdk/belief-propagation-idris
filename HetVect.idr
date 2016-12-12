@@ -13,15 +13,15 @@ data Vect : List Type -> Type where
 -- Name hints for interactive editing
 %name Vect vs, ws, xs, ys, zs
 
-curryTypeV : (ts : List Type) -> (result : Type) -> Type
-curryTypeV [] result = result
-curryTypeV (t :: ts) result = t -> curryTypeV ts result
+curried : (ts : List Type) -> (result : Type) -> Type
+curried [] result = result
+curried (t :: ts) result = t -> curried ts result
 
-curryV : (f : Vect ts -> result) -> curryTypeV ts result
+curryV : (f : Vect ts -> result) -> curried ts result
 curryV f {ts = []} = f []
 curryV f {ts = (t :: ts)} = \x => curryV (f . (x::))
 
-uncurryV : (f : curryTypeV ts result) -> Vect ts -> result
+uncurryV : (f : curried ts result) -> Vect ts -> result
 uncurryV f [] = f
 uncurryV f (x :: xs) = uncurryV (f x) xs
 
