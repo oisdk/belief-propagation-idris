@@ -39,3 +39,7 @@ using (x:a, y:a, xs:List a)
 ||| Nothing can be in an empty Vect
 noEmptyElem : {x : a} -> Elem x [] -> Void
 noEmptyElem Here impossible
+
+data Subset : List a -> List a -> Type where
+  EmptySet : Subset [] ys
+  WithElem : (later : Subset xs ys) -> Elem x ys -> Subset (x::xs) ys

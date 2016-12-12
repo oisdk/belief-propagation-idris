@@ -1,3 +1,3 @@
 package belief
 
-modules = Semiring, HetVect, Marginalization, Prob
+modules = Semiring, HetVect, Marginalization, Prob, TaggedProb

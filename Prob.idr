@@ -40,38 +40,3 @@ getProb (Bnd {xs} ps f) = \y => margVec (\ws => allMessages ws * getProb (f ws) 
     in \(v::vs) => ms (n * m v) vs -- change to not tail-recursive to make parallel
   allMessages : Vect xs -> s
   allMessages = funcs ps one
-
-(>>=) : (MinBound a, MaxBound a, Enum a) => Prob s a -> (a -> Prob s b) -> Prob s b
-x >>= f = Bnd [x] (\([y]) => f y)
-
-pure : Eq a => a -> Prob Double a
-pure x = Dst (\y => if y == x then 1.0 else 0.0)
-
-bool : Prob Double Bool
-bool = Dst (const 0.5)
-
-implementation MaxBound Bool where maxBound = True
-
-implementation MinBound Bool where minBound = False
-
-implementation Enum Bool where
-  pred True = False
-  pred False = False
-  toNat True = 1
-  toNat False = 0
-  fromNat Z = False
-  fromNat _ = True
-
-ands : Prob Double Bool
-ands = do
-  x <- bool
-  y <- bool
-  z <- bool
-  pure (x && y && z)
-
-res : Double
-res = getProb ands True
-
-f : Bool -> Double
-f True = 0.5
-f False = 0.5
