@@ -43,3 +43,24 @@ noEmptyElem Here impossible
 data Subset : List a -> List a -> Type where
   EmptySet : Subset [] ys
   WithElem : (later : Subset xs ys) -> Elem x ys -> Subset (x::xs) ys
+
+split : {xs, ys : List Type} -> Vect (xs++ys) -> (Vect xs, Vect ys)
+split {xs = []} vs = ([], vs)
+split {xs = (x :: xs)} (y :: ys)
+  = let (lhs,rhs) = split ys
+    in  (y :: lhs, rhs)
+
+uncurryLong
+  :  {xs, ys : List Type}
+  -> (Vect xs -> Vect ys -> a)
+  -> Vect (xs++ys)
+  -> a
+uncurryLong f = uncurry f . split
+
+lengthen
+  :  {xs, ys : List Type}
+  -> (Vect ys -> a)
+  -> Vect (xs++ys)
+  -> a
+lengthen {xs=_::xs} f (_::vs) = lengthen {xs} f vs
+lengthen {xs=[]} f vs = f vs

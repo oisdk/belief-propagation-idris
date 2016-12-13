@@ -3,10 +3,12 @@ module TaggedProb
 import Marginalization
 import Semiring
 import HetVect
+import Data.Morphisms
 
 %default total
 %access public export
 %hide Prelude.Pairs.DPair.snd
+%hide Prelude.Pairs.DPair.fst
 
 mutual
   ||| Probability monad which keeps a list of the variables it contains
@@ -43,7 +45,21 @@ mutual
 
   getProb : Semiring s => Prob s xs a -> (Prob s xs a, Vect xs -> a -> s)
   getProb (Dst f) = (Dst f, f)
-  getProb (Bnd {xs} ps f) = ?rhs
+  getProb (Bnd ps f) {xs=xs++ys} = ?rhs where
+    fprop : (Prob s ys a, Vect ys -> a -> s)
+    fprop = getProb f
+    mprop : (MultiProb s xs ys, Vect xs -> Vect ys -> s)
+    mprop = getMultiProb ps
+    fdist : Vect (xs++ys) -> a -> s
+    fdist = lengthen (snd fprop)
+    mdist : Vect (xs++ys) -> a -> s
+    mdist = const . uncurryLong (snd mprop)
+      -- cmb : (Vect xs, Vect ys)
+      -- cmb = split vs
+      -- lhs : Vect xs
+      -- lhs = fst cmb
+      -- rhs : Vect ys
+      -- rhs = snd cmb
     -- (fx,fd) = getProb f
     -- rhs ws y = margVecR getProb (f ws) y
     -- (Bnd ps f, \ws => (\y => allMessages ws * getProb (f ws) y))
