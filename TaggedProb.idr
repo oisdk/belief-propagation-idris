@@ -29,48 +29,27 @@ mutual
 
 mutual
   -- I want FOLDS for goodness' sake.
-  getMultiProb : Semiring s => MultiProb s xs ys -> (MultiProb s xs ys, Vect xs -> Vect ys -> s)
-  getMultiProb [] = ([], \_, _ => one)
+  getMultiProb : Semiring s => MultiProb s xs ys -> Vect xs -> Vect ys -> s
+  getMultiProb [] = \_, _ => one
   getMultiProb (p::ps) {xs=cs++xs} {ys=x::ys}
-      = (fst head :: fst rest, \vxs, (y::vys) =>  prodFuncsV (hfnc y) (rfnc vys) vxs) where
-    rest : (MultiProb s xs ys, Vect xs -> Vect ys -> s)
-    rest = getMultiProb ps
+      = \vxs, (y::vys) =>  prodFuncsV (hfnc y) (rfnc vys) vxs where
     rfnc : Vect ys -> Vect xs -> s
-    rfnc vys vxs = snd rest vxs vys
-    head : (Prob s cs x, Vect cs -> x -> s)
-    head = getProb p
+    rfnc vys vxs = (getMultiProb ps) vxs vys
     hfnc : x -> Vect cs -> s
-    hfnc y vcs = snd head vcs y
+    hfnc y vcs = getProb p vcs y
 
 
-  getProb : Semiring s => Prob s xs a -> (Prob s xs a, Vect xs -> a -> s)
-  getProb (Dst f) = (Dst f, f)
-  getProb (Bnd ps f) {xs=xs++ys} = ?rhs where
-    fprop : (Prob s ys a, Vect ys -> a -> s)
-    fprop = getProb f
-    mprop : (MultiProb s xs ys, Vect xs -> Vect ys -> s)
-    mprop = getMultiProb ps
+  getProb : Semiring s => Prob s xs a -> Vect xs -> a -> s
+  getProb (Dst f) vs x = f vs x
+  getProb (Bnd ps f) {xs=xs++ys} vs x = fdist vs x * mdist vs x  where
     fdist : Vect (xs++ys) -> a -> s
-    fdist = lengthen (snd fprop)
+    fdist = lengthen (getProb f)
     mdist : Vect (xs++ys) -> a -> s
-    mdist = const . uncurryLong (snd mprop)
-      -- cmb : (Vect xs, Vect ys)
-      -- cmb = split vs
-      -- lhs : Vect xs
-      -- lhs = fst cmb
-      -- rhs : Vect ys
-      -- rhs = snd cmb
-    -- (fx,fd) = getProb f
-    -- rhs ws y = margVecR getProb (f ws) y
-    -- (Bnd ps f, \ws => (\y => allMessages ws * getProb (f ws) y))
-    -- This function is written in a somewhat strange way to highlight
-    -- the parallel nature of the recursive call to getProb.
-    -- funcs : Semiring s => {ys : List Type} -> MultiProb s ys zs -> s -> Vect ys -> s
-    -- funcs [] n = \_ => n
-    -- funcs (p::ps) n =
-    --   let (up,m) = getProb p
-    --       ms = funcs ps
-    --   in \(v::vs) => ms (n * m v) vs -- change to not tail-recursive to make parallel
-    -- allMessages : Vect xs -> s
-    -- allMessages = funcs ps one
- 
+    mdist = const . uncurryLong (getMultiProb ps)
+
+pure : (Semiring s, Eq a) => a -> Prob s [] a
+pure x = Dst (\([]), y => if x == y then one else zer)
+
+(>>=) : Semiring s => Prob s xs a -> (a -> Prob s ys b) -> Prob s (a::xs++ys) b
+(>>=) p f
+  = Dst (\(x::xs), y => prodFuncsV (flip (getProb p) x) (flip (getProb (f x)) y) xs)
