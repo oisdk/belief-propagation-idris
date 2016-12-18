@@ -18,7 +18,7 @@ prodFuncsV {xs=[]} f g vs = f Nil * g vs
 prodFuncsV {xs=x::xs} f g (y :: z) = prodFuncsV (f . (y::)) g z
 
 ||| A proof that every type in a given list belongs to a finite, bounded,
-||| enumerable domain. Possibly better modelled in a more generic way (ie for 
+||| enumerable domain. Possibly better modelled in a more generic way (ie for
 ||| arbitrary constraints).
 data AllFinite : List Type -> Type where
   Empty : AllFinite []
