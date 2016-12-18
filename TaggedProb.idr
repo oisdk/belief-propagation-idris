@@ -63,22 +63,22 @@ mutual
 -- pure : a -> Prob s [] a
 -- pure x = Dst (\([]), f => f x)
 
--- mutual
---   sendInMulti : Semiring s => MultiProb s xs ys -> Vect xs -> (Vect ys -> s) -> s
---   sendInMulti [] vs f = f vs
---   sendInMulti (p::ps) vs {xs=cs++xs} {ys=x::ys} f = sendIn (fst spt) (\y => sendInMulti ps (snd spt) (\ys => f (y::ys))) p where
---     spt : (Vect cs, Vect xs)
---     spt = split vs
+mutual
+  sendInMulti : Semiring s => MultiProb s xs ys -> Vect xs -> (Vect ys -> s) -> s
+  sendInMulti [] vs f = f vs
+  sendInMulti (p::ps) vs {xs=cs++xs} {ys=x::ys} f = sendIn (fst spt) (\y => sendInMulti ps (snd spt) (\ys => f (y::ys))) p where
+    spt : (Vect cs, Vect xs)
+    spt = split vs
 
---   sendIn : Semiring s => Vect xs -> (a -> s) -> Prob s xs a -> s
---   sendIn vs f (Dst g) = g vs f
---   sendIn vs f (Bnd x y) {xs=xs++ys} = lhs (fst spt) (\zs => rhs zs * rhs (snd spt))  where
---     rhs : Vect ys -> s
---     rhs vs = sendIn vs f y
---     lhs : Vect xs -> (Vect ys -> s) -> s
---     lhs = sendInMulti x
---     spt : (Vect xs, Vect ys)
---     spt = split vs
+  sendIn : Semiring s => Vect xs -> (a -> s) -> Prob s xs a -> s
+  sendIn vs f (Dst g) = g vs f
+  sendIn vs f (Bnd x y) {xs=xs++ys} = lhs (fst spt) (\zs => rhs zs * rhs (snd spt))  where
+    rhs : Vect ys -> s
+    rhs vs = sendIn vs f y
+    lhs : Vect xs -> (Vect ys -> s) -> s
+    lhs = sendInMulti x
+    spt : (Vect xs, Vect ys)
+    spt = split vs
 
 -- prop : Semiring s => Prob s xs a -> Vect xs -> s
 -- prop x vs = sendIn vs (getProb x vs) x
