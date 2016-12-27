@@ -30,16 +30,19 @@ data Prob : (unit : Type) -> (given : Type) -> (var : Type) -> Type where
 
 getProb : Semiring s => Prob s a b -> (Prob s a b, a -> (b -> s) -> s)
 getProb (Dst f) = (Dst f, f)
-getProb (Bnd {xs} {ys} {b} x y) = ?getProb_rhs_2 where
+getProb (Bnd {xs} {ys} {b} x y) = (Dst res, res) where
   lhs : (Prob s (Vect xs) (Vect ys), Vect xs -> (Vect ys -> s) -> s)
   lhs = getProb x
   rhs : (Prob s (Vect ys) b, Vect ys -> (b -> s) -> s)
   rhs = getProb y
+  res : Vect (xs++ys) -> (b -> s) -> s
+  res vs f = prodFuncsV (flip (snd lhs) imd) imd vs  where
+    imd : Vect ys -> s
+    imd = flip (snd rhs) f
 
-
-
--- pure : a -> Prob s [] a
--- pure x = Dst (\([]), f => f x)
+observe : (x : a) -> Prob s (Vect xs) a -> {auto prf : Elem a xs} -> (ys ** Prob s (Vect ys) a)
+observe x {a} (Dst f) {xs} {prf} = (remove a xs prf ** Dst (pop prf f x))
+observe x (Bnd y z) = ?observe_rhs_2
 
 -- mutual
 --   sendInMulti : Semiring s => MultiProb s xs ys -> Vect xs -> (Vect ys -> s) -> s
