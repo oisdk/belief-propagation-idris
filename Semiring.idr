@@ -75,4 +75,36 @@ VerifiedSemiring Bool where
   mulDsL False y z = Refl
   mulDsL True  y z = Refl
 
+Semiring Nat where
+  (+) = plus
+  (*) = mult
+  one = 1
+  zer = 0
 
+VerifiedSemiring Nat where
+  plusAssoc x y z = sym (plusAssociative x y z)
+  multAssoc x y z = sym (multAssociative x y z)
+  plusComm = plusCommutative
+  plusId = plusZeroRightNeutral
+  mulAnL = multZeroLeftZero
+  mulAnR = multZeroRightZero
+  mulIdL = multOneLeftNeutral
+  mulIdR = multOneRightNeutral
+  mulDsL = multDistributesOverPlusRight
+  mulDsR = multDistributesOverPlusLeft
+
+interface Semigroup a => VerifiedSemigroup a where
+  semigroupOpIsAssociative : (l, c, r : a) -> l <+> (c <+> r) = (l <+> c) <+> r
+
+interface (VerifiedSemigroup a, Monoid a) => VerifiedMonoid a where
+  monoidNeutralIsNeutralL : (l : a) -> l <+> neutral = l
+  monoidNeutralIsNeutralR : (r : a) -> neutral <+> r = r
+
+interface VerifiedMonoid a => CommutativeMonoid a where
+  mappendCommutes : (x, y : a) -> x <+> y = y <+> x
+
+CommutativeMonoid a => Semiring (Endomorphism a) where
+  (Endo f) + (Endo g) = Endo (\x => f x <+> g x)
+  (Endo f) * (Endo g) = Endo (f . g)
+  zer = Endo (const neutral)
+  one = Endo id
