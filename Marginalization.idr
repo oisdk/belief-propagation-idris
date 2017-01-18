@@ -118,15 +118,3 @@ prodFuncs
 prodFuncs {xs=[]} x y = x * y
 prodFuncs {n} {xs=x::xs} f g
   = \y => prodFuncs {n} {xs} (f y) (g y)
-
-
--- margSubset
---   : {n : Type}
---   -> Semiring n
---   => {xs, ys : List Type}
---   -> {auto sub : Subset ys xs}
---   -> {auto fin : AllFinite xs}
---   -> (Vect xs -> n)
---   -> Vect ys -> n
--- margSubset {sub = EmptySet} f [] = margVec f
--- margSubset {sub = WithElem later elem}

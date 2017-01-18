@@ -66,28 +66,10 @@ lengthen {xs=_::xs} f (_::vs) = lengthen {xs} f vs
 lengthen {xs=[]} f vs = f vs
 
 
-remove : (x  : a) -> (xs : List a) -> (prf : Elem x xs) -> List a
+remove : (x : a) -> (xs : List a) -> (prf : Elem x xs) -> List a
 remove x (x :: ys) Here = ys
 remove x (y :: ys) (There z) = y :: remove x ys z
 
-removeSubs : (Subset xs ys) -> (prf : Elem x ys) -> Subset xs (remove x ys prf)
-removeSubs EmptySet prf = EmptySet
-removeSubs (WithElem later elem) prf = WithElem (removeSubs later prf) ?removeSubs_rhs_4
-
-pop
-  : {x : Type}
-  -> {xs : List Type}
-  -> (prf : Elem x xs)
-  -> (Vect xs -> n)
-  -> (x -> Vect (remove x xs prf) -> n)
-pop Here f v vs = f (v :: vs)
-pop (There z) f v (x :: vs) = pop z (f . (x::)) v vs
-
-difference
-  :  (xs : List a)
-  -> (ys : List a)
-  -> (subs : Subset xs ys)
-  -> List a
-difference [] ys EmptySet = ys
-difference (x :: xs) ys (WithElem later prf) = difference xs (remove x ys prf) (removeSubs later prf)
-
+addBack : {xs : List Type} -> {x : Type} -> {auto prf : Elem x xs } -> (val : x) -> (vec : Vect (remove x xs prf)) -> Vect xs
+addBack {prf = Here} val vec = val :: vec
+addBack {prf = (There x)} val (v::vs) = v :: addBack val vs
