@@ -30,13 +30,27 @@ mutual
 getProb : Semiring s => Prob s a -> a -> s
 getProb (Dst f) = f
 getProb (Bnd {xs} ps f) = \y => margVec (\ws => allMessages ws * getProb (f ws) y) where
-  -- This function is written in a somewhat strange way to highlight
-  -- the parallel nature of the recursive call to getProb.
+
   funcs : Semiring s => {ys : List Type} -> MultiProb s ys -> s -> Vect ys -> s
-  funcs [] n = \_ => n
-  funcs (p::ps) n =
+  funcs [] = \n, _ => n
+  funcs (p::ps) =
     let m  = getProb p
         ms = funcs ps
-    in \(v::vs) => ms (n * m v) vs -- change to not tail-recursive to make parallel
+    in \n, (v::vs) => ms (n * m v) vs -- change to not tail-recursive to make parallel
+
   allMessages : Vect xs -> s
   allMessages = funcs ps one
+
+getProbPar : Semiring s => Prob s a -> a -> s
+getProbPar (Dst f) = f
+getProbPar (Bnd {xs} ps f) = \y => margVec (\ws => allMessages ws * getProb (f ws) y) where
+
+  funcs : Semiring s => {ys : List Type} -> MultiProb s ys -> Vect ys -> s
+  funcs [] = \_ => one
+  funcs (p::ps) = \(v::vs) =>
+    let m  = getProbPar p v -- Evaluate these in parallel (only currently possible in Haskell)
+        ms = funcs ps vs
+    in ms * m
+
+  allMessages : Vect xs -> s
+  allMessages = funcs ps
