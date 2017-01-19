@@ -2,29 +2,64 @@ module TaggedProb
 
 import Semiring
 import Data.Morphisms
-import HetTree
+import HetVect
+import Marginalization
 
-%default total
+-- %default total
 %access public export
 
-||| A free monad for probabilities, which remembers the variables it
-||| contains
-data Prob : (unit : Type) -> (variables : Tree Type) -> (current : Type) -> Type where
-  Obs : ((a -> s) -> s) -> Prob s Nil a
-  Dst :  (a -> s) -> Prob s (End a) a
-  Bnd : Prob s ls a -> (a -> Prob s rs b) -> Prob s (ls::rs) b
+mutual
+  data Prob : (unit : Type) -> (current : Type) -> Type where
+    Dist : ((a -> s) -> s) -> Prob s a
+    Fmap : (Vect xs -> b) -> ListProb s xs -> Prob s b
+    Join : Prob s (Prob s a) -> Prob s a
 
-observe : {xs : Tree Type} -> (val : x) -> {auto elem : Elem x xs} -> Prob s xs a -> Prob s (remove x xs elem) a
-observe val (Dst _) {elem = Here} = Obs (\f => f val)
-observe val (Bnd x f) {elem = (Left  p)} = Bnd (observe val x) f
-observe val (Bnd x f) {elem = (Right p)} = Bnd x (observe val . f)
+  data ListProb : (unit : Type) -> (xs : List Type) -> Type where
+    Nil : ListProb s []
+    (::) : Prob s x -> ListProb s xs -> ListProb s (x::xs)
 
-margOut
-  : (MinBound x, MaxBound x, Enum x, Semiring s)
-  => {xs : Tree Type}
-  -> {auto elem : Elem x xs}
-  -> Prob s xs a
-  -> Prob s (remove x xs elem) a
-margOut {elem = Here     } (Dst   f)  = Obs (\c => marg (\x => f x * c x))
-margOut {elem = (Left  p)} (Bnd x f)  = Bnd (margOut x) f
-margOut {elem = (Right p)} (Bnd x f)  = Bnd x (margOut {elem=p} . f)
+getProb : Prob s a -> (a -> s) -> s
+getProb (Dist g) f = g f
+getProb (Join x) f = getProb x (\a => getProb a f)
+getProb (Fmap g ps) f = go g ps f where
+  go : (Vect xs -> b) -> ListProb s xs -> (b -> s) -> s
+  go f [] g = g (f [])
+  go f (p :: ps) g = getProb p (\x => go (f . (x::)) ps g)
+
+map : (a -> b) -> Prob s a -> Prob s b
+map f (Dist g) = Dist (\h => g (h . f))
+map f (Fmap g x) = Fmap (f . g) x
+map f (Join x) = Join (map (\p => map f p) x)
+
+(<$>) : (a -> b) -> Prob s a -> Prob s b
+(<$>) = map
+
+
+pure : a -> Prob s a
+pure x = Fmap (\([]) => x) Nil
+
+return : a -> Prob s a
+return = pure
+
+(<*>) : Prob s (a -> b) -> Prob s a -> Prob s b
+(<*>) (Dist f) xs = Dist (\k => f (\c => getProb xs (k . c)))
+(<*>) (Fmap f ps) p = Fmap (\(v::vs) => f vs v) (p::ps)
+(<*>) (Join x) xs = Join (map (<*> xs) x)
+
+join : Prob s (Prob s a) -> Prob s a
+join = Join
+
+(>>=) : Prob s a -> (a -> Prob s b) -> Prob s b
+(>>=) p f = Join (map f p)
+
+dice : Prob Double Int
+dice = Dist (\f => Semiring.sum ( map (\n => f n / 6.0) [1 .. 6]) )
+
+probOf : (Eq a, Semiring s) => a -> Prob s a -> s
+probOf x p = getProb p (\y => if x == y then one else zer)
+
+dices : Prob Double Int
+dices = do
+  x <- dice
+  y <- dice
+  return (x+y)

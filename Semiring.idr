@@ -37,6 +37,12 @@ Semiring Double where
   one = 1
   zer = 0
 
+Semiring Int where
+  (+) = prim__addInt
+  (*) = prim__mulInt
+  one = 1
+  zer = 0
+
 interface Semiring a => VerifiedSemiring a where
   plusAssoc : (x, y, z : a) -> (x + y) + z = x + (y + z)
   multAssoc : (x, y, z : a) -> (x * y) * z = x * (y * z)
